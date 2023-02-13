@@ -10,9 +10,10 @@ COLS = 14
 ROWS = 10
 
 
+colors = []
 link = None
 
-def epahya2(data, offset):
+def epahya2(data):
     
     size_data = len(data) 
     size_shifted = int(size_data/3)
@@ -38,18 +39,36 @@ def epahya2(data, offset):
 
     print(shifted_array)
     
-    size = link.tx_obj(shifted_array, offset)
+    size = link.tx_obj(shifted_array, 0)
     
     print("Sending", data, "... size:", size)
     link.send(size)
 
-def on_release2(key):
+   # awaitResponse()
+    # print('Response received:')
+    # response = link.rx_obj(obj_type=list, obj_byte_size=link.bytesRead, list_format='B')
+    
+
+
+    # print(response[0:size_data])
+
+def on_release(key):
+    global colors
     if (key == keyboard.KeyCode.from_char('1')):
-        epahya2("1")
+        colors += [255]
+        colors += [0]
+        colors += [0]
+        epahya2(colors)
     if (key == keyboard.KeyCode.from_char('2')):
-        epahya2("2")
+        colors += [0]
+        colors += [255]
+        colors += [0]
+        epahya2(colors)
     if (key == keyboard.KeyCode.from_char('3')):
-        epahya2("3")
+        colors += [0]
+        colors += [0]
+        colors += [255]
+        epahya2(colors)
     
 def imageSendingMachine():
     size = COLS, ROWS
@@ -66,36 +85,24 @@ def mainTest1():
 
     
     try:
-        keyboard_listener = keyboard.Listener(on_release=on_release2)
-        keyboard_listener.start()
+        # keyboard_listener = keyboard.Listener(on_release=on_release)
+        # keyboard_listener.start()
         link = txfer.SerialTransfer('/dev/ttyACM0')
         awaitResponse()
 
-
-        cool = [255]*41
-        for i in range(0,len(cool),2):
+        cool = [0]*60
+        for i in range(0,60,2):
             cool[i] = 100
-
+        epahya2(cool)
         while True:
-            epahya2([255, 10, 100, 89, 100, 34, 22, 89, 56],0)
-
-            epahya2([255, 10, 100, 89, 100, 34, 22, 89, 56], 3)
             
-            awaitResponse()
-            
-            print("im pretty")
-            sleep(0.2)
-            print("im ugly")
-            print('Response received:')
-            response = link.rx_obj(obj_type=list, obj_byte_size=link.bytesRead, list_format='B')
-            print(response)
+            pass
             # for index in range(link.bytesRead):
                 # response += str(link.rxBuff[index])
-  
+      
     except KeyboardInterrupt:
-        print("YOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
         link.close()
-        sys.exit()
+        # quit()
 
 if __name__ == '__main__':
     mainTest1()

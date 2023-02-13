@@ -1,3 +1,9 @@
+#include <Packet.h>
+#include <PacketCRC.h>
+#include <SerialTransfer.h>
+#include <I2CTransfer.h>
+#include <SPITransfer.h>
+
 #include <SerialTransfer.h>
 #include <FastLED.h>
 
@@ -20,7 +26,6 @@ void setup() {
   FastLED.setBrightness(BRIGHTNESS);
   Serial.begin(115200);
 
-  myTransfer.begin(Serial);
 }
 
 // converts from 2D plane to an array index. (0, 0) is in top left
@@ -39,9 +44,6 @@ int matrixToIndex(int x, int y){
 }
 
 void loop() {
-  if(myTransfer.available()){
-    
-  }
   
   for(int x = 0; x < COLS; ++x){
     for(int y = 0; y < ROWS; ++y){
@@ -50,7 +52,7 @@ void loop() {
       Serial.print(x);Serial.print(",");Serial.println(y);
       Serial.println(index);
       FastLED.show();
-      //delay(100);  
+      delay(100);  
     }
   }
 
@@ -59,41 +61,7 @@ void loop() {
       int index = matrixToIndex(x, y);
       leds[index] = CHSV(255 - ((float)(x + y) / (float)(COLS + ROWS)) * 255, 255, 255);
       FastLED.show();
-      //delay(100);  
+      delay(100);  
     }
   }
-}
-
-void serialEvent()
-{
-   while(Serial.available()) 
-   {
-     char ch = Serial.read();
-     Serial.print(ch);
-     for(int x = 0; x < COLS; ++x){
-    for(int y = 0; y < ROWS; ++y){
-      int index = matrixToIndex(x, y);
-      leds[index] = CRGB(0, 0, 0);
-      FastLED.show();
-    }
-  }
-      /*if(index < MaxChars && isDigit(ch)) { 
-            strValue[index++] = ch; 
-      } else { 
-            strValue[index] = 0; 
-            newAngle = atoi(strValue); 
-            if(newAngle > 0 && newAngle < 180){
-                   if(newAngle < angle) 
-                       for(; angle > newAngle; angle -= 1) {
-                             myservo.write(angle);
-                       }  
-                    else 
-                       for(; angle < newAngle; angle += 1){
-                          myservo.write(angle);
-                    } 
-            }
-            index = 0;
-            angle = newAngle;
-      }*/
-   }
 }

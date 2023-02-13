@@ -1,3 +1,5 @@
+#include <SimpleSerialProtocol.h>
+#include <Core.h>
 
 #include <Packet.h>
 #include <PacketCRC.h>
@@ -18,10 +20,10 @@
 #define USELESS_PER_ROW 5
 #define BRIGHTNESS 30
 
-CRGB leds[NUM_LEDS];
+CRGB leds[NUM_LEDS]={0};
 
 SerialTransfer myTransfer;
-
+uint8_t response[252] = {0};
 
 void setup()
 {
@@ -30,6 +32,7 @@ void setup()
   FastLED.setBrightness(BRIGHTNESS);
   Serial.begin(115200);
   myTransfer.begin(Serial);
+ FastLED.show();
 
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
@@ -37,36 +40,58 @@ void setup()
   delay(2000);
 }
 
+// converts from 2D plane to an array index. (0, 0) is in top left
+int matrixToIndex(int x, int y){
+  // if LED strip starts from right to left from the top. 0 or 1
+  bool STARTS_FROM_R_TO_L = (y % 2 == 0);
+  
+  // either this row is from left to right, or right to left
+  // right to left
+  if(STARTS_FROM_R_TO_L)
+    return (COLS - x - 1) + y * COLS + USELESS_PER_ROW * y;
+  
+  // left to right
+  if(!STARTS_FROM_R_TO_L)
+    return x + y * COLS + USELESS_PER_ROW * y;
+}
+
 
 void loop()
 {
-  leds[1] = CRGB(255, 0, 0);
-  leds[2] = CRGB(0, 255, 0);
-  leds[3] = CRGB(0, 0, 255);
-  FastLED.show();
   //delay(400);
   
-  char response[254] = {0};
   if(myTransfer.available())
   {
     //digitalWrite(13, HIGH);
     //delay(100);
     //digitalWrite(13, LOW);
     //delay(100);
+
+   uint16_t bytes_read = myTransfer.rxObj(response, 0, myTransfer.bytesRead);
     
     for(int i = 0; i < myTransfer.bytesRead; ++i)
       response[i] = myTransfer.packet.rxBuff[i];
- 
-    for(int i = 0; i < 1; ++i)
-      leds[i] = CRGB((int)response[i+0]*2, (int) response[i+1]*2,(int) response[i+2]*2);
-    
+   
+    /*response[0] = 0;
+    response[1] = 255;
+    response[2] = 0;
+    response[3] = 0;
+    response[4] = 0;
+    response[5] = 255;
+    response[6] = 0;
+    response[7] = 0;
+    */
+    for(int i = 0; i <  bytes_read; i+=4){
+      leds[i/4] = CRGB((int)response[i+2], (int) response[i+1],(int) response[i]);
+    }
     FastLED.show();
     delay(200);
-   }
+  }
+  myTransfer.txObj(response, 0, 252);
+  
+  //for(int i = 0; i < 254; ++i)
+    //myTransfer.packet.txBuff[i] = response[i];
 
-  for(int i = 0; i < 254; ++i)
-    myTransfer.packet.txBuff[i] = response[i];
-
- myTransfer.sendData(254);
+ myTransfer.sendData(252);
  delay(200);
 }
